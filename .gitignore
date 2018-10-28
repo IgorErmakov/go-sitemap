@@ -1,0 +1,5 @@
+bin
+pkg
+.idea
+src/golang.org
+src/github.com
