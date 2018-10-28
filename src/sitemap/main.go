@@ -5,8 +5,8 @@ import (
 	"text/template"
 	//"fmt"
 	"os"
-	"post"
-	"product"
+	"sitemap/post"
+	"sitemap/product"
 )
 
 

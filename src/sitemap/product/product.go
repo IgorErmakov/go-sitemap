@@ -1,4 +1,4 @@
-package post
+package product
 
 import (
 	"database/sql"
@@ -12,10 +12,8 @@ import _ "github.com/go-sql-driver/mysql"
 
 type product struct {
 	id int
-	post_title string
-	post_name string
-	post_date string
-	Location string
+	ASIN string
+	page_link string
 	LastMod string
 }
 
@@ -33,17 +31,15 @@ func DbConnect() (*sql.DB, error) {
 	return db, err
 }
 
-func GetPosts() []map[string]string {
+func GetProducts() []map[string]string {
 
-	if (db == nil) {
-
-		//fmt.Println("conn")
+	if db == nil {
 
 		dbConn, err := DbConnect()
 
 		db = dbConn
 
-		if (err != nil) {
+		if err != nil {
 			panic("Can not connect to db")
 		}
 	}
@@ -51,15 +47,13 @@ func GetPosts() []map[string]string {
 	defer db.Close()
 
 
-	sql := `SELECT id, post_title, post_name, post_date
-		    FROM z_posts
-		    WHERE post_type = 'post'
-		    AND post_status = 'publish'`
+	sql := `SELECT id, ASIN, page_link
+		    FROM products`
 
 
 	rows, err := db.Query(sql)
 
-	if (err != nil) {
+	if err != nil {
 		panic(err)
 	}
 
@@ -71,29 +65,23 @@ func GetPosts() []map[string]string {
 
 	timeFormatted := currentTime.Format("2006-01-02")
 
-	for (rows.Next()) {
+	for rows.Next() {
 
 		p := product{}
 
-		err := rows.Scan(&p.id, &p.post_title, &p.post_name, &p.post_date)
-
-		dateStr := p.post_date[0:4] + "/" + p.post_date[5:7] + "/" + p.post_date[8:10]
-
-		p.Location = "/" + dateStr + "/" + p.post_name
+		err := rows.Scan(&p.id, &p.ASIN, &p.page_link)
 
 		p.LastMod = timeFormatted
 
-		if (err != nil) {
+		if err != nil {
+
 			fmt.Println(err)
 			continue
 		}
 
 		arrItem := map[string]string{
 			"id": string(p.id),
-			"post_title": p.post_title,
-			"post_name": p.post_name,
-			"post_date": p.post_date,
-			"Location": p.Location,
+			"Location": "/dp/" + p.ASIN + "/" + p.page_link + ".html",
 			"LastMod": p.LastMod,
 		}
 
@@ -107,7 +95,9 @@ func getConfig() map[string]string  {
 
 	cfgPath := os.Getenv("SITEMAP_CFG")
 
-	//".config.json"
+	if cfgPath == "" {
+		panic("export SITEMAP_CFG=PATH_TO_cfg file")
+	}
 
 	r, err := os.Open(cfgPath)
 	//r, err := os.Open("/webserver/go/config.json")
